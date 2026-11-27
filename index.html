@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeMirror — Your Trading Journal & Coach</title>
+<style>
+  :root{
+    --bg:#0e1320; --card:#161d2e; --card2:#1d2639; --line:#2a3550;
+    --txt:#e9edf6; --muted:#98a2bd; --accent:#4f8cff; --accent2:#7c5cff;
+    --good:#34d399; --goodbg:rgba(52,211,153,.12); --warn:#fbbf24; --bad:#f87171; --badbg:rgba(248,113,113,.12);
+    --long:#4f8cff; --short:#c084fc;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(170deg,#0b0f1a,#121a2b);color:var(--txt);line-height:1.5;padding:22px 14px 90px}
+  .wrap{max-width:900px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+  .logo{font-size:23px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{font-size:12.5px;color:var(--muted)}
+  .io button{background:var(--card2);border:1px solid var(--line);color:var(--muted);font-size:12px;padding:6px 11px;border-radius:8px;cursor:pointer;margin-left:6px;font-weight:600}
+  .io button:hover{color:var(--txt);border-color:var(--accent)}
+
+  .statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+  @media(max-width:620px){.statrow{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .stat .n{font-size:22px;font-weight:800;margin-top:3px;letter-spacing:-.5px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px}
+  .card h2{font-size:16px;margin-bottom:3px}
+  .accentline{height:3px;width:42px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;margin:4px 0 16px}
+
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:9px 11px;font-size:14px;outline:none;font-family:inherit}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(max-width:620px){.grid3,.grid2{grid-template-columns:1fr 1fr}}
+  .field{margin-bottom:13px}
+  .section-label{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);font-weight:700;margin:16px 0 8px}
+
+  /* direction toggle */
+  .dir{display:flex;gap:8px;margin-bottom:6px}
+  .dir button{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--muted);padding:10px;border-radius:10px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s}
+  .dir button.onL{background:rgba(79,140,255,.16);border-color:var(--long);color:#b9d0ff}
+  .dir button.onS{background:rgba(192,132,252,.16);border-color:var(--short);color:#e6ccff}
+  .dirhint{font-size:11.5px;color:#6b7691;margin-bottom:12px}
+
+  .btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;color:#fff;font-weight:700;font-size:14px;padding:11px 18px;border-radius:10px;cursor:pointer;width:100%;margin-top:6px}
+
+  .insight{border-radius:11px;padding:13px 15px;margin-bottom:10px;font-size:13.5px;border:1px solid var(--line);background:var(--card2)}
+  .insight.good{border-color:rgba(52,211,153,.35);background:var(--goodbg)}
+  .insight.bad{border-color:rgba(248,113,113,.3);background:var(--badbg)}
+  .insight b{font-weight:800}
+  .insight .ico{font-size:15px;margin-right:6px}
+
+  .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+  .badge{font-size:12px;font-weight:700;padding:6px 11px;border-radius:20px;background:var(--card2);border:1px solid var(--line);color:var(--muted)}
+  .badge.on{background:rgba(124,92,255,.15);border-color:var(--accent2);color:#c3b4ff}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:8px 8px;border-bottom:1px solid var(--line)}
+  td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .pill.g{color:var(--good);border-color:rgba(52,211,153,.4)}
+  .pill.b{color:var(--bad);border-color:rgba(248,113,113,.4)}
+  .pill.long{color:#b9d0ff;border-color:var(--long)}
+  .pill.short{color:#e6ccff;border-color:var(--short)}
+  .pos{color:var(--good);font-weight:700}
+  .neg{color:var(--bad);font-weight:700}
+  .tip{font-size:12px;color:#f3d88a;margin-top:5px;background:rgba(251,191,36,.08);border-left:2px solid var(--warn);padding:5px 9px;border-radius:4px}
+  .del{color:#6b7691;cursor:pointer;font-size:12px}
+  .del:hover{color:var(--bad)}
+  .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
+  .muted{color:var(--muted)}
+  .celebrate{text-align:center;padding:10px;font-size:13.5px;color:#c3b4ff;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="logo">TradeMirror</div>
+      <div class="tag">Long or short, log every trade with the <em>why</em>. See what your emotions cost — or earn — you.</div>
+    </div>
+    <div class="io">
+      <button id="sampleBtn">Load sample</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+    </div>
+  </header>
+
+  <div class="statrow" id="stats"></div>
+
+  <!-- ADD TRADE -->
+  <div class="card">
+    <h2>Log a trade</h2>
+    <div class="accentline"></div>
+
+    <label>Direction</label>
+    <div class="dir" id="dirToggle">
+      <button data-dir="long" class="onL">▲ LONG&nbsp; (Buy → Sell)</button>
+      <button data-dir="short">▼ SHORT&nbsp; (Sell → Buy)</button>
+    </div>
+    <div class="dirhint" id="dirHint">Long: you buy to enter, sell to exit. Profit when price goes up.</div>
+
+    <div class="grid3">
+      <div class="field"><label>Stock / symbol</label><input id="symbol" placeholder="e.g. BANKNIFTY"></div>
+      <div class="field"><label>Quantity</label><input id="qty" type="number" min="1" placeholder="100"></div>
+      <div class="field"><label id="entryPriceLabel">Buy price (entry)</label><input id="entryPrice" type="number" step="0.01" placeholder="650"></div>
+    </div>
+
+    <div class="section-label" id="entrySectionLabel">The entry — why did you get in?</div>
+    <div class="grid2">
+      <div class="field"><label>Entry date</label><input id="entryDate" type="date"></div>
+      <div class="field"><label id="entryReasonLabel">What drove the entry?</label>
+        <select id="entryReason">
+          <option value="plan">Planned — research / thesis</option>
+          <option value="technical">Technical setup / chart</option>
+          <option value="news">News / event</option>
+          <option value="average">Adding to position</option>
+          <option value="fomo">FOMO — chased the move</option>
+          <option value="tip">Tip — someone told me</option>
+          <option value="revenge">Revenge — recovering a loss</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>How were you feeling?</label>
+      <select id="mood">
+        <option value="calm">Calm &amp; in control</option>
+        <option value="excited">Excited / hyped</option>
+        <option value="anxious">Anxious / unsure</option>
+        <option value="greedy">Greedy — didn't want to miss out</option>
+      </select>
+    </div>
+
+    <div class="section-label" id="exitSectionLabel">The exit — leave blank if still open</div>
+    <div class="grid3">
+      <div class="field"><label id="exitPriceLabel">Sell price (exit)</label><input id="exitPrice" type="number" step="0.01" placeholder="optional"></div>
+      <div class="field"><label>Exit date</label><input id="exitDate" type="date"></div>
+      <div class="field"><label>Why did you exit?</label>
+        <select id="exitReason">
+          <option value="">— still open —</option>
+          <option value="target">Hit my target</option>
+          <option value="stoploss">Stop-loss / cut on plan</option>
+          <option value="thesis">Thesis / setup changed</option>
+          <option value="early">Closed early — got impatient</option>
+          <option value="panic">Panic — fear took over</option>
+          <option value="cash">Needed the cash / margin</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><textarea id="notes" rows="2" placeholder="What were you thinking? What would you tell your future self?"></textarea></div>
+    <button class="btn" id="addBtn">Log this trade</button>
+    <div id="formMsg"></div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="card">
+    <h2>Your coach</h2>
+    <div class="accentline"></div>
+    <div id="insights"></div>
+    <div class="section-label">Badges earned</div>
+    <div class="badge-row" id="badges"></div>
+  </div>
+
+  <!-- TRADES -->
+  <div class="card">
+    <h2>Trade log</h2>
+    <div class="accentline"></div>
+    <div id="tradeList"></div>
+  </div>
+
+  <p class="muted" style="text-align:center;font-size:11.5px">Your data stays in this browser only. Use Export regularly to keep a backup. Not investment advice — a mirror for your own decisions.</p>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var KEY="trademirror_v1";
+  var trades=[], streak={last:null,count:0}, mem=false, dir="long";
+
+  function migrate(t){
+    // old long-only schema -> new direction schema
+    if(t.entryPrice===undefined && t.buyPrice!==undefined){
+      t.dir='long';
+      t.entryPrice=t.buyPrice; t.exitPrice=(t.sellPrice===undefined?null:t.sellPrice);
+      t.entryDate=t.buyDate||null; t.exitDate=t.sellDate||null;
+      t.entryReason=t.buyReason; t.exitReason=t.sellReason||null; t.mood=t.buyMood||'calm';
+    }
+    if(!t.dir) t.dir='long';
+    return t;
+  }
+  function load(){
+    try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);trades=(o.trades||[]).map(migrate);streak=o.streak||streak;}}catch(e){mem=true;}
+  }
+  function save(){try{if(!mem)localStorage.setItem(KEY,JSON.stringify({trades:trades,streak:streak}));}catch(e){mem=true;}}
+
+  var entryMeta={
+    plan:{label:"Planned",cls:"g",good:true}, technical:{label:"Technical",cls:"g",good:true},
+    news:{label:"News",cls:"",good:null}, average:{label:"Added",cls:"",good:null},
+    fomo:{label:"FOMO",cls:"b",good:false}, tip:{label:"Tip",cls:"b",good:false}, revenge:{label:"Revenge",cls:"b",good:false}
+  };
+  var exitMeta={
+    target:{label:"Target",cls:"g",good:true}, stoploss:{label:"Stop-loss",cls:"g",good:true}, thesis:{label:"Setup chg",cls:"g",good:true},
+    early:{label:"Closed early",cls:"",good:null}, panic:{label:"Panic",cls:"b",good:false}, cash:{label:"Cash need",cls:"",good:null}
+  };
+  var tips={
+    fomo:"FOMO entries chase a move that's already happened. Write the price you'd act at BEFORE it runs — if it's past that, let it go.",
+    tip:"Tip-based trades mean someone else owns your exit. If you can't explain the thesis in one line, it isn't yours to hold.",
+    revenge:"Revenge trades size up when judgement is worst. Rule: after a loss, next trade is HALF size — or no trade that day.",
+    panic:"Panic exits turn paper losses into real ones at the worst price. A pre-set stop decides for you, before fear can.",
+    early:"Closing early caps winners while losers run full-size — that maths quietly kills accounts. Let a target or trailing stop exit for you.",
+    plan:"A planned trade that lost is just variance — the process was right. Keep sizing the same and let the edge play out.",
+    technical:"The setup was valid; this one didn't work. Cost of doing business. Log it and move on without changing the plan.",
+    news:"News fades fast. If the move's already priced in by the time you read it, there's no edge left to trade.",
+    average:"Adding to a losing position is only valid if you'd open it fresh today — never just to feel better about the first entry."
+  };
+
+  var fmt=function(x){var s=Math.round(Math.abs(x)).toLocaleString('en-IN');return (x<0?"-₹":"₹")+s};
+  var fmtS=function(x){return (x>=0?"+":"")+fmt(x)};
+
+  function pnlOf(t){
+    if(t.exitPrice==null||t.exitPrice==="") return null;
+    var q=parseFloat(t.qty), en=parseFloat(t.entryPrice), ex=parseFloat(t.exitPrice);
+    return (t.dir==='short') ? (en-ex)*q : (ex-en)*q;   // short profits when exit < entry
+  }
+
+  // ---- direction UI ----
+  $("dirToggle").querySelectorAll("button").forEach(function(b){
+    b.onclick=function(){
+      dir=b.dataset.dir;
+      $("dirToggle").querySelectorAll("button").forEach(function(x){x.className=""});
+      b.className = dir==='long'?'onL':'onS';
+      if(dir==='long'){
+        $("dirHint").textContent="Long: you buy to enter, sell to exit. Profit when price goes up.";
+        $("entryPriceLabel").textContent="Buy price (entry)";
+        $("exitPriceLabel").textContent="Sell price (exit)";
+      }else{
+        $("dirHint").textContent="Short: you sell to enter, buy back to cover. Profit when price goes down.";
+        $("entryPriceLabel").textContent="Sell price (entry)";
+        $("exitPriceLabel").textContent="Buy price (exit / cover)";
+      }
+    };
+  });
+
+  // ---- stats ----
+  function renderStats(){
+    var closed=trades.filter(function(t){return pnlOf(t)!=null});
+    var total=closed.reduce(function(a,t){return a+pnlOf(t)},0);
+    var wins=closed.filter(function(t){return pnlOf(t)>0}).length;
+    var wr=closed.length?Math.round(wins/closed.length*100):0;
+    var planned=trades.filter(function(t){return entryMeta[t.entryReason]&&entryMeta[t.entryReason].good===true}).length;
+    var disc=trades.length?Math.round(planned/trades.length*100):0;
+    $("stats").innerHTML=
+      card("Net P&L",(total>=0?'<span class="pos">':'<span class="neg">')+fmtS(total)+'</span>')+
+      card("Win rate",wr+'%')+card("Discipline",disc+'%')+card("Log streak",(streak.count||0)+'🔥');
+  }
+  function card(l,n){return '<div class="stat"><div class="l">'+l+'</div><div class="n">'+n+'</div></div>'}
+
+  // ---- coach ----
+  function renderCoach(){
+    var closed=trades.filter(function(t){return pnlOf(t)!=null});
+    var box=$("insights");
+    if(trades.length===0){box.innerHTML='<div class="empty">Log your first trade and your coach wakes up. Or hit <b>Load sample</b> to see it in action.</div>';$("badges").innerHTML="";return;}
+    var out=[];
+    var g={};
+    closed.forEach(function(t){var r=t.entryReason;if(!g[r])g[r]={pnl:0,n:0,w:0};g[r].pnl+=pnlOf(t);g[r].n++;if(pnlOf(t)>0)g[r].w++;});
+
+    var plannedPnl=(g.plan?g.plan.pnl:0)+(g.technical?g.technical.pnl:0);
+    var emoPnl=(g.fomo?g.fomo.pnl:0)+(g.tip?g.tip.pnl:0)+(g.revenge?g.revenge.pnl:0);
+    var plannedN=(g.plan?g.plan.n:0)+(g.technical?g.technical.n:0);
+    var emoN=(g.fomo?g.fomo.n:0)+(g.tip?g.tip.n:0)+(g.revenge?g.revenge.n:0);
+    if(plannedN&&emoN){
+      var gap=plannedPnl-emoPnl;
+      out.push(ins(gap>=0?'good':'','🎯','Your <b>planned</b> trades did <b>'+fmtS(plannedPnl)+'</b> over '+plannedN+'. Your <b>emotional</b> ones (FOMO / tips / revenge) did <b>'+fmtS(emoPnl)+'</b> over '+emoN+'. '+(gap>0?'Discipline has been worth <b>'+fmt(gap)+'</b> to you — that gap is your edge.':'Your gut has paid off lately; keep logging and watch whether it holds over more trades.')));
+    }
+
+    // long vs short performance
+    var L={pnl:0,n:0},S={pnl:0,n:0};
+    closed.forEach(function(t){var o=(t.dir==='short')?S:L;o.pnl+=pnlOf(t);o.n++;});
+    if(L.n&&S.n){
+      var better=L.pnl>=S.pnl?'long':'short';
+      out.push(ins('','↕️','You trade both sides: <b>long</b> '+fmtS(L.pnl)+' ('+L.n+'), <b>short</b> '+fmtS(S.pnl)+' ('+S.n+'). You've been sharper on the <b>'+better+'</b> side — worth knowing which way your read actually works.'));
+    }
+
+    var arr=Object.keys(g).map(function(k){return {k:k,v:g[k]}}).sort(function(a,b){return b.v.pnl-a.v.pnl});
+    if(arr.length){
+      var best=arr[0];
+      if(best.v.pnl>0) out.push(ins('good','🏆','Your most profitable style is <b>'+(entryMeta[best.k]?entryMeta[best.k].label:best.k)+'</b>: <b>'+fmtS(best.v.pnl)+'</b> across '+best.v.n+', '+Math.round(best.v.w/best.v.n*100)+'% winners. Do more of this — you handle these well.'));
+      var worst=arr[arr.length-1];
+      if(worst.k!==best.k&&worst.v.pnl<0) out.push(ins('bad','💡','<b>'+(entryMeta[worst.k]?entryMeta[worst.k].label:worst.k)+'</b> trades have cost you <b>'+fmt(worst.v.pnl)+'</b>. Not a scolding — just the number. '+(tips[worst.k]||'')));
+    }
+
+    var panic=closed.filter(function(t){return t.exitReason==='panic'});
+    if(panic.length){var pp=panic.reduce(function(a,t){return a+pnlOf(t)},0);out.push(ins('bad','😮‍💨','You panic-closed '+panic.length+' time'+(panic.length>1?'s':'')+' ('+fmtS(pp)+'). '+tips.panic));}
+    var sl=closed.filter(function(t){return t.exitReason==='stoploss'});
+    if(sl.length>=2) out.push(ins('good','🛡️','You honoured your stop '+sl.length+' times. That's the hardest habit in trading and you're doing it. Respect.'));
+    var pw=closed.filter(function(t){return entryMeta[t.entryReason]&&entryMeta[t.entryReason].good===true&&pnlOf(t)>0});
+    if(pw.length>=3) out.push(ins('good','⭐',pw.length+' planned trades closed in profit. This is what "boring and rich" looks like. Keep stacking them.'));
+
+    box.innerHTML=out.join('');
+    renderBadges(g,closed);
+  }
+  function ins(cls,ico,html){return '<div class="insight '+cls+'"><span class="ico">'+ico+'</span>'+html+'</div>'}
+  function renderBadges(g,closed){
+    var defs=[
+      {label:'📓 First Entry',on:trades.length>=1},
+      {label:'🔟 Ten Logged',on:trades.length>=10},
+      {label:'↕️ Two-Way Trader',on:trades.some(function(t){return t.dir==='long'})&&trades.some(function(t){return t.dir==='short'})},
+      {label:'🛡️ Iron Hand',on:closed.filter(function(t){return t.exitReason==='stoploss'}).length>=2},
+      {label:'🧠 Thesis Master',on:(g.plan&&g.plan.pnl>0)},
+      {label:'🧊 FOMO Slayer',on:!g.fomo||g.fomo.pnl>=0},
+      {label:'🔥 On a Streak',on:(streak.count||0)>=3},
+      {label:'🎯 Target Taker',on:closed.filter(function(t){return t.exitReason==='target'}).length>=3}
+    ];
+    $("badges").innerHTML=defs.map(function(b){return '<span class="badge '+(b.on?'on':'')+'">'+b.label+'</span>'}).join('');
+  }
+
+  // ---- list ----
+  function renderList(){
+    var box=$("tradeList");
+    if(trades.length===0){box.innerHTML='<div class="empty">No trades yet.</div>';return;}
+    var sorted=trades.slice().sort(function(a,b){return (b.entryDate||'').localeCompare(a.entryDate||'')});
+    var rows=sorted.map(function(t){
+      var pnl=pnlOf(t),open=pnl==null;
+      var em=entryMeta[t.entryReason]||{label:t.entryReason,cls:''};
+      var xm=t.exitReason?(exitMeta[t.exitReason]||{label:t.exitReason,cls:''}):null;
+      var dirPill='<span class="pill '+(t.dir==='short'?'short':'long')+'">'+(t.dir==='short'?'▼ SHORT':'▲ LONG')+'</span>';
+      var pnlCell=open?'<span class="pill">OPEN</span>':'<span class="'+(pnl>=0?'pos':'neg')+'">'+fmtS(pnl)+'</span>';
+      var showTip=!open&&pnl<0;
+      var tipKey=(t.exitReason==='panic')?'panic':(t.exitReason==='early'?'early':t.entryReason);
+      var tipHtml=showTip&&tips[tipKey]?'<div class="tip">💡 '+tips[tipKey]+'</div>':'';
+      var sizeStr=t.qty+' @ '+fmt(t.entryPrice)+(open?'':'<br>→ '+fmt(t.exitPrice));
+      return '<tr>'+
+        '<td><b>'+esc(t.symbol)+'</b> '+dirPill+'<br><span class="muted" style="font-size:11px">'+(t.entryDate||'')+(t.exitDate?' → '+t.exitDate:'')+'</span></td>'+
+        '<td><span class="pill '+em.cls+'">'+em.label+'</span>'+(xm?'<br><span class="pill '+xm.cls+'" style="margin-top:4px">'+xm.label+'</span>':'')+'</td>'+
+        '<td class="muted">'+sizeStr+'</td>'+
+        '<td>'+pnlCell+tipHtml+(t.notes?'<div class="muted" style="font-size:11px;margin-top:4px">“'+esc(t.notes)+'”</div>':'')+'</td>'+
+        '<td><span class="del" data-id="'+t.id+'">✕</span></td></tr>';
+    }).join('');
+    box.innerHTML='<table><thead><tr><th>Trade</th><th>Why</th><th>Size</th><th>Result</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+    box.querySelectorAll('.del').forEach(function(el){el.onclick=function(){trades=trades.filter(function(t){return t.id!=el.dataset.id});save();renderAll();}});
+  }
+  function esc(s){return (s||'').replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]})}
+
+  // ---- add ----
+  $("addBtn").onclick=function(){
+    var sym=$("symbol").value.trim().toUpperCase();
+    var qty=parseFloat($("qty").value), en=parseFloat($("entryPrice").value);
+    if(!sym||!(qty>0)||!(en>0)){$("formMsg").innerHTML='<div class="insight bad" style="margin-top:12px">Fill in symbol, quantity and entry price at least.</div>';return;}
+    var ex=$("exitPrice").value;
+    var t={id:Date.now()+''+Math.floor(Math.random()*999),symbol:sym,dir:dir,qty:qty,
+      entryPrice:en,entryDate:$("entryDate").value||new Date().toISOString().slice(0,10),
+      entryReason:$("entryReason").value,mood:$("mood").value,
+      exitPrice:ex===""?null:parseFloat(ex),exitDate:$("exitDate").value||null,
+      exitReason:$("exitReason").value||null,notes:$("notes").value.trim()};
+    trades.push(t);bumpStreak();save();
+    var pnl=pnlOf(t),msg;
+    var side=dir==='short'?'short':'long';
+    if(pnl==null) msg="Logged ✓ — "+side+" position open. Close it here when you exit.";
+    else if(pnl>0&&entryMeta[t.entryReason]&&entryMeta[t.entryReason].good) msg="Logged ✓ — a planned "+side+" winner ("+fmtS(pnl)+"). Exactly the trade to repeat. 👏";
+    else if(pnl>0) msg="Logged ✓ — nice, "+fmtS(pnl)+". Check your coach: skill or luck?";
+    else msg="Logged ✓ — a red one, but logging it is how it stops repeating. Coach has a tip below. 💪";
+    $("formMsg").innerHTML='<div class="celebrate">'+msg+'</div>';
+    ["symbol","qty","entryPrice","exitPrice","exitDate","notes"].forEach(function(id){$(id).value=""});
+    renderAll();
+  };
+  function bumpStreak(){var today=new Date().toISOString().slice(0,10);if(streak.last===today)return;var y=new Date(Date.now()-86400000).toISOString().slice(0,10);streak.count=(streak.last===y)?(streak.count+1):1;streak.last=today;}
+
+  // ---- io ----
+  $("exportBtn").onclick=async function(){
+    var data=JSON.stringify({trades:trades,streak:streak},null,2);
+    try{var dl=await claude.use("downloads");if(dl){await dl.save({filename:"trademirror-backup.json",data:data});return;}}catch(e){}
+    var blob=new Blob([data],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="trademirror-backup.json";a.click();
+  };
+  $("importBtn").onclick=function(){$("importFile").click()};
+  $("importFile").onchange=function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var o=JSON.parse(rd.result);if(o.trades){trades=o.trades.map(migrate);streak=o.streak||streak;save();renderAll();}}catch(err){alert("Could not read that file.")}};rd.readAsText(f);};
+  $("sampleBtn").onclick=function(){
+    trades=[
+      {id:'s1',symbol:'TATAMOTORS',dir:'long',qty:100,entryPrice:620,entryDate:'2026-10-02',entryReason:'plan',mood:'calm',exitPrice:712,exitDate:'2026-10-20',exitReason:'target',notes:'Q2 thesis, waited for my level'},
+      {id:'s2',symbol:'IRFC',dir:'long',qty:200,entryPrice:168,entryDate:'2026-10-05',entryReason:'fomo',mood:'greedy',exitPrice:149,exitDate:'2026-10-07',exitReason:'panic',notes:'All over my feed, jumped in'},
+      {id:'s3',symbol:'BANKNIFTY',dir:'short',qty:30,entryPrice:52400,entryDate:'2026-10-09',entryReason:'technical',mood:'calm',exitPrice:51850,exitDate:'2026-10-09',exitReason:'target',notes:'Intraday short at resistance, covered same day'},
+      {id:'s4',symbol:'ZOMATO',dir:'long',qty:150,entryPrice:265,entryDate:'2026-10-11',entryReason:'tip',mood:'excited',exitPrice:242,exitDate:'2026-10-18',exitReason:'panic',notes:'Friend said it would run'},
+      {id:'s5',symbol:'HAL',dir:'short',qty:20,entryPrice:4200,entryDate:'2026-10-14',entryReason:'revenge',mood:'anxious',exitPrice:4360,exitDate:'2026-10-15',exitReason:'panic',notes:'Shorted to make back the Zomato loss, squeezed'},
+      {id:'s6',symbol:'RELIANCE',dir:'long',qty:15,entryPrice:1410,entryDate:'2026-10-22',entryReason:'plan',mood:'calm',exitPrice:1498,exitDate:'2026-11-01',exitReason:'target',notes:''},
+      {id:'s7',symbol:'NIFTY',dir:'short',qty:50,entryPrice:25900,entryDate:'2026-11-06',entryReason:'technical',mood:'calm',exitPrice:25700,exitDate:'2026-11-06',exitReason:'stoploss',notes:'Breakdown failed, cut it quickly'},
+      {id:'s8',symbol:'INFY',dir:'long',qty:30,entryPrice:1550,entryDate:'2026-11-10',entryReason:'plan',mood:'calm',exitPrice:null,exitDate:null,exitReason:null,notes:'Positional, still holding'}
+    ];
+    streak={last:new Date().toISOString().slice(0,10),count:4};save();renderAll();
+  };
+
+  function renderAll(){renderStats();renderCoach();renderList();}
+  load();renderAll();
+})();
+</script>
+</body>
+</html>
